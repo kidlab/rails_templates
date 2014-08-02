@@ -1,4 +1,4 @@
-=== Rails Application Templates
+# Rails Application Templates
 
 #### API application
 
