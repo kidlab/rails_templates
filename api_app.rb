@@ -105,25 +105,6 @@ after_bundler do
   run "spring stop"
 end
 
-# >-----------------------------[ ActiveRecord ]------------------------------<
-
-@current_recipe = "activerecord"
-@before_configs["activerecord"].call if @before_configs["activerecord"]
-say_recipe 'ActiveRecord'
-
-config = {}
-config['database'] = 'postgresql'
-@configs[@current_recipe] = config
-
-if config['database']
-  say_wizard "Configuring '#{config['database']}' database settings..."
-  old_gem = gem_for_database
-  @options = @options.dup.merge(database: config['database'])
-  gsub_file 'Gemfile', "gem '#{old_gem}'", "gem '#{gem_for_database}'"
-  template "config/databases/#{@options[:database]}.yml", "config/database.yml.new"
-  run 'mv config/database.yml.new config/database.yml'
-end
-
 # >---------------------------------[ Rspec ]----------------------------------<
 
 say_recipe 'Rspec'
@@ -1032,6 +1013,26 @@ after_everything do
   match "*unmatched_route", to: "application#raise_not_found!", via: :all
 }
   end
+end
+
+
+# >-----------------------------[ ActiveRecord ]------------------------------<
+
+@current_recipe = "activerecord"
+@before_configs["activerecord"].call if @before_configs["activerecord"]
+say_recipe 'ActiveRecord'
+
+config = {}
+config['database'] = 'postgresql'
+@configs[@current_recipe] = config
+
+if config['database']
+  say_wizard "Configuring '#{config['database']}' database settings..."
+  old_gem = gem_for_database
+  @options = @options.dup.merge(database: config['database'])
+  gsub_file 'Gemfile', "gem '#{old_gem}'", "gem '#{gem_for_database}'"
+  template "config/databases/#{@options[:database]}.yml", "config/database.yml.new"
+  run 'mv config/database.yml.new config/database.yml'
 end
 
 # >-----------------------------[ Run Bundler ]-------------------------------<
