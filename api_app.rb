@@ -105,6 +105,34 @@ after_bundler do
   run "spring stop"
 end
 
+# >-----------------------------[ ActiveRecord ]------------------------------<
+
+@current_recipe = "activerecord"
+@before_configs["activerecord"].call if @before_configs["activerecord"]
+say_recipe 'ActiveRecord'
+
+config = {}
+config['database'] = 'postgresql'
+@configs[@current_recipe] = config
+
+old_gem = gem_for_database
+old_options = @options.dup
+@options = @options.dup.merge(database: config['database'])
+inject_into_file "Gemfile", after: "gem '#{old_gem}'\n" do
+  "gem '#{gem_for_database}'\n"
+end
+
+# Revert back to the original gem, we will change it later.
+@options = old_options
+
+after_everything do
+  say_wizard "Configuring '#{config['database']}' database settings..."
+  @options = @options.dup.merge(database: config['database'])
+  gsub_file 'Gemfile', "gem '#{old_gem}'", ""
+  template "config/databases/#{@options[:database]}.yml", "config/database.yml.new"
+  run 'mv config/database.yml.new config/database.yml'
+end
+
 # >---------------------------------[ Rspec ]----------------------------------<
 
 say_recipe 'Rspec'
@@ -1013,35 +1041,6 @@ after_everything do
   match "*unmatched_route", to: "application#raise_not_found!", via: :all
 }
   end
-end
-
-
-# >-----------------------------[ ActiveRecord ]------------------------------<
-
-@current_recipe = "activerecord"
-@before_configs["activerecord"].call if @before_configs["activerecord"]
-say_recipe 'ActiveRecord'
-
-config = {}
-config['database'] = 'postgresql'
-@configs[@current_recipe] = config
-
-old_gem = gem_for_database
-old_options = @options.dup
-@options = @options.dup.merge(database: config['database'])
-inject_into_file "Gemfile", after: "gem '#{old_gem}'\n" do
-  "gem '#{gem_for_database}'\n"
-end
-
-# Revert back to the original gem, we will change it later.
-@options = old_options
-
-after_everything do
-  say_wizard "Configuring '#{config['database']}' database settings..."
-  @options = @options.dup.merge(database: config['database'])
-  gsub_file 'Gemfile', "gem '#{old_gem}'", ""
-  template "config/databases/#{@options[:database]}.yml", "config/database.yml.new"
-  run 'mv config/database.yml.new config/database.yml'
 end
 
 # >-----------------------------[ Run Bundler ]-------------------------------<
