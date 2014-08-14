@@ -1027,9 +1027,14 @@ config['database'] = 'postgresql'
 @configs[@current_recipe] = config
 
 old_gem = gem_for_database
+old_options = @options.dup
+@options = @options.dup.merge(database: config['database'])
 inject_into_file "Gemfile", after: "gem '#{old_gem}'\n" do
-  "  gem '#{config['database']}'\n"
+  "gem '#{gem_for_database}'\n"
 end
+
+# Revert back to the original gem, we will change it later.
+@options = old_options
 
 after_everything do
   say_wizard "Configuring '#{config['database']}' database settings..."
