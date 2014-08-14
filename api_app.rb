@@ -1026,11 +1026,15 @@ config = {}
 config['database'] = 'postgresql'
 @configs[@current_recipe] = config
 
-if config['database']
+old_gem = gem_for_database
+inject_into_file "Gemfile", after: "gem '#{old_gem}'\n" do
+  "  gem '#{config['database']}'\n"
+end
+
+after_everything do
   say_wizard "Configuring '#{config['database']}' database settings..."
-  old_gem = gem_for_database
   @options = @options.dup.merge(database: config['database'])
-  gsub_file 'Gemfile', "gem '#{old_gem}'", "gem '#{gem_for_database}'"
+  gsub_file 'Gemfile', "gem '#{old_gem}'", ""
   template "config/databases/#{@options[:database]}.yml", "config/database.yml.new"
   run 'mv config/database.yml.new config/database.yml'
 end
