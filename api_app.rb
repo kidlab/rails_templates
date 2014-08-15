@@ -416,7 +416,7 @@ say_recipe 'SettingsLogic'
 gem 'settingslogic'
 
 after_bundler do
-  create_file 'config/settings.yml' do
+  create_file 'config/api-keys.yml.erb' do
 <<-SETTINGS
 defaults: &defaults
   host: 'http://localhost:3000'
