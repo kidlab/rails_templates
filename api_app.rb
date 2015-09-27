@@ -554,7 +554,8 @@ gem 'newrelic_rpm'
 say_recipe 'Unicorn'
 
 gem_group :staging, :production do
-  gem 'unicorn', '>= 4.8.3'
+  gem 'unicorn', '~> 4.9.0'
+  gem 'rails_12factor'
 end
 
 create_file "config/unicorn.rb" do
