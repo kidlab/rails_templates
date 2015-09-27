@@ -115,11 +115,20 @@ config = {}
 config['database'] = 'postgresql'
 @configs[@current_recipe] = config
 
-if config['database']
+old_gem = gem_for_database
+old_options = @options.dup
+@options = @options.dup.merge(database: config['database'])
+inject_into_file "Gemfile", after: "gem '#{old_gem}'\n" do
+  "gem '#{gem_for_database}'\n"
+end
+
+# Revert back to the original gem, we will change it later.
+@options = old_options
+
+after_everything do
   say_wizard "Configuring '#{config['database']}' database settings..."
-  old_gem = gem_for_database
   @options = @options.dup.merge(database: config['database'])
-  gsub_file 'Gemfile', "gem '#{old_gem}'", "gem '#{gem_for_database}'"
+  gsub_file 'Gemfile', "gem '#{old_gem}'", ""
   template "config/databases/#{@options[:database]}.yml", "config/database.yml.new"
   run 'mv config/database.yml.new config/database.yml'
 end
@@ -407,7 +416,7 @@ say_recipe 'SettingsLogic'
 gem 'settingslogic'
 
 after_bundler do
-  create_file 'config/settings.yml' do
+  create_file 'config/api-keys.yml.erb' do
 <<-SETTINGS
 defaults: &defaults
   host: 'http://localhost:3000'
